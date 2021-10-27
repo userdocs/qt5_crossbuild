@@ -1,0 +1,220 @@
+name: qt5+crossbuild+package+release
+on:
+  - workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name: [qt]
+        os_id: [debian, ubuntu]
+        os_version_id: [buster, bullseye, bionic, focal]
+        arch: [amd64, armhf, arm64]
+        include:
+          - arch: amd64
+            CHOST: "x86_64-linux-gnu"
+            docker_arch: amd64
+            docker_platform: linux/amd64
+          - arch: armhf
+            CHOST: "arm-linux-gnueabihf"
+            docker_arch: arm32v7
+            docker_platform: linux/arm/v7
+            qt_mkspec: -xplatform linux-arm-gnueabi-g++
+          - arch: arm64
+            CHOST: "aarch64-linux-gnu"
+            docker_arch: arm64v8
+            docker_platform: linux/arm64/v8
+            qt_mkspec: -xplatform linux-aarch64-gnu-g++
+        exclude:
+          - os_id: debian
+            os_version_id: bionic
+          - os_id: debian
+            os_version_id: focal
+          - os_id: ubuntu
+            os_version_id: buster
+          - os_id: ubuntu
+            os_version_id: bullseye
+
+    name: ${{ matrix.os_id }}:${{ matrix.os_version_id }} ${{ matrix.name }} ${{ matrix.arch }}
+    env:
+      CHOST: "${{ matrix.CHOST }}"
+      CC: "${{ matrix.CHOST }}-gcc"
+      AR: "${{ matrix.CHOST }}-ar"
+      CXX: "${{ matrix.CHOST }}-g++"
+      opt_dir_name: "opt/swizzin_apps"
+      qt_short_version: "5.15"
+    steps:
+      - uses: actions/checkout@v2.3.4
+
+      - name: Host - update
+        run: sudo apt-get update
+
+      - name: Host - upgrade
+        run: sudo apt-get -y upgrade
+
+      - name: Host - Install host qemu-static
+        run: sudo apt-get install -y qemu binfmt-support qemu-user-static
+
+      - name: Host - Docker multiarch bootstrap
+        run: sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Host - Create Docker template env file
+        run: |
+          echo "PATH=/${{ env.opt_dir_name }}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" > env.custom
+          echo "LD_LIBRARY_PATH=/${{ env.opt_dir_name }}/lib:/usr/lib:/usr/local/lib" >> env.custom
+
+      - name: Host - Create docker multiarch ${{ matrix.arch }} container
+        run: docker run --name multiarch -it -d --env-file env.custom -w /root -e 'LANG=en_US.UTF-8' -e 'DEBIAN_FRONTEND=noninteractive' -e CHOST=${{ env.CHOST }} -e CC=${{ env.CC }} -e AR=${{ env.AR }} -e CXX=${{ env.CXX }} -v ${{ github.workspace }}:/root ${{ matrix.os_id }}:${{ matrix.os_version_id }}
+
+      - name: Host - Create docker binary test ${{ matrix.arch }} container
+        run: docker run --name bintest -it -d --env-file env.custom -w /root -e 'LANG=en_US.UTF-8' -e 'DEBIAN_FRONTEND=noninteractive' --platform ${{ matrix.docker_platform }} -v ${{ github.workspace }}:/root ${{ matrix.docker_arch }}/${{ matrix.os_id }}:${{ matrix.os_version_id }}
+
+      - name: Docker target - fix Ubuntu sources
+        if: |
+          matrix.os_id == 'ubuntu' && matrix.arch != 'amd64'
+        run: |
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports ${{ matrix.os_version_id }} main restricted universe multiverse" > sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports ${{ matrix.os_version_id }}-updates main restricted universe multiverse" >> sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports ${{ matrix.os_version_id }}-security main restricted universe multiverse" >> sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${{ matrix.os_version_id }} main restricted universe multiverse" >> sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${{ matrix.os_version_id }}-updates main restricted universe multiverse" >> sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ ${{ matrix.os_version_id }}-backports restricted universe multiverse" >> sources.list'
+          docker exec --env-file env.custom -w /etc/apt/ multiarch  bash -c 'echo "deb [arch=amd64] http://security.ubuntu.com/ubuntu/ ${{ matrix.os_version_id }}-security main restricted universe multiverse" >> sources.list'
+
+      - name: Docker target - dpkg configure arch
+        run: docker exec --env-file env.custom multiarch dpkg --add-architecture ${{ matrix.arch }}
+
+      - name: Docker target - Run apt-get update
+        run: |
+          docker exec --env-file env.custom multiarch apt-get update
+          docker exec --env-file env.custom bintest apt-get update
+
+      - name: Docker target - Run apt-get upgrade
+        run: |
+          docker exec --env-file env.custom multiarch apt-get upgrade -y
+          docker exec --env-file env.custom bintest apt-get upgrade -y
+
+      - name: Docker target - apt-get install the core build dependencies
+        run: |
+          docker exec --env-file env.custom multiarch apt-get install -y build-essential curl pkg-config automake libtool git perl python3 python3-dev unzip
+          docker exec --env-file env.custom bintest apt-get install -y openssl
+
+      - name: Docker target - apt-get install crossbuild-essential
+        if: matrix.arch != 'amd64'
+        run: docker exec --env-file env.custom multiarch apt-get install -y crossbuild-essential-${{ matrix.arch }}
+
+      - name: Docker target - apt-get install cross target deps
+        run: docker exec --env-file env.custom multiarch apt-get install -y zlib1g-dev:${{ matrix.arch }} libssl-dev:${{ matrix.arch }} libstdc++-*-dev:${{ matrix.arch }}
+
+      - name: Docker target - bionic - apt-get install gcc-8-base g++-8
+        if: matrix.arch == 'amd64' && matrix.os_version_id == 'bionic'
+        run: docker exec --env-file env.custom multiarch apt-get install -y gcc-8 g++-8
+
+      - name: Docker target - bionic - apt-get install gcc-8 g++-8 cross
+        if: matrix.arch != 'amd64' && matrix.os_version_id == 'bionic'
+        run: docker exec --env-file env.custom multiarch apt-get install -y cpp-8-${{ matrix.CHOST }} g++-8-${{ matrix.CHOST }} gcc-8-${{ matrix.CHOST }}
+
+      - name: Docker target - bionic - reconfigure build vars
+        if: matrix.os_version_id == 'bionic'
+        run: |
+          echo "CC=${{ env.CC }}-8" >> env.custom
+          echo "AR=${{ env.AR }}-8" >> env.custom
+          echo "CXX=${{ env.CXX }}-8" >> env.custom
+
+      - name: Docker target - cmake and ninja download and install
+        run: |
+          docker exec --env-file env.custom multiarch curl -sNL "https://github.com/userdocs/cmake_crossbuild/releases/latest/download/${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb" -o ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
+          docker exec --env-file env.custom multiarch dpkg -i ${{ matrix.os_id }}-${{ matrix.os_version_id }}-cmake-${{ matrix.arch }}.deb
+
+      - name: Docker target - qt get latest release info and set to env
+        run: |
+          qt_github_tag_list="$(git ls-remote -q -t --refs https://github.com/qt/qtbase.git | awk '{sub("refs/tags/", "");sub("(.*)(-[^0-9].*)(.*)", ""); print $2 }' | awk '!/^$/' | sort -rV)"
+          qt_github_tag="$(grep -Eom1 "v${{ env.qt_short_version }}.([0-9]{1,2})" <<< "${qt_github_tag_list}")"
+          echo "qt_version=${qt_github_tag/v/}" >> $GITHUB_ENV
+
+      - name: Docker target - qt set the download urls
+        run: |
+          echo "qt_qtbase_url=https://download.qt.io/official_releases/qt/${{ env.qt_short_version }}/${{ env.qt_version }}/submodules/qtbase-everywhere-src-${{ env.qt_version }}.tar.xz" >> $GITHUB_ENV
+          echo "qt_qttools_url=https://download.qt.io/official_releases/qt/${{ env.qt_short_version }}/${{ env.qt_version }}/submodules/qttools-everywhere-src-${{ env.qt_version }}.tar.xz" >> $GITHUB_ENV
+
+      - name: Docker target - qt qtbase - curl
+        run: |
+          docker exec --env-file env.custom multiarch curl -sNL ${{ env.qt_qtbase_url }} -o qtbase.tar.xz
+          docker exec --env-file env.custom multiarch tar xf qtbase.tar.xz
+
+      - name: Docker target - qt qtbase - mkspec armhf
+        if: matrix.arch == armhf
+        run: sed "s|arm-linux-gnueabi|${{ env.CHOST }}|g" -i "/root/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-arm-gnueabi-g++/qmake.conf"
+
+      - name: Docker target - qt qtbase - mkspec arm64
+        if: matrix.arch == arm64
+        run: sed "s|aarch64-linux-gnu|${{ env.CHOST }}|g" -i "/root/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-aarch64-gnu-g++/qmake.conf"
+
+      - name: Docker target - qt qtbase - configure
+        run: |
+          docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ env.qt_mkspec }}" \
+          -prefix "/root/build/${{ env.opt_dir_name }}" -icu -opensource -confirm-license -release -openssl-linked -static -c++std 17 \
+          -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
+          -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples
+
+      - name: Docker target - qt qtbase - make
+        run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch make
+
+      - name: Docker target - qt qtbase - make install
+        run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch make install
+
+      - name: Docker target - qt qttools - curl
+        run: |
+          docker exec --env-file env.custom multiarch curl -sNL ${{ env.qt_qttools_url }} -o qttools.tar.xz
+          docker exec --env-file env.custom multiarch tar xf qttools.tar.xz
+
+      - name: Docker target - qt qttools - make build
+        run: |
+          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
+          make -j"$(nproc)"
+
+      - name: Docker target - qt qttools - make install
+        run: |
+          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
+          make install
+
+      - name: Docker target - Set deb dependencies for qt
+        run: echo "qt-deb-deps=zlib1g,openssl" >> $GITHUB_ENV
+
+      - name: Docker target - ldconfig - create /etc/ld.so.conf.d/qt.conf
+        run: |
+          docker exec --env-file env.custom -w /root/build multiarch mkdir -p etc/ld.so.conf.d
+          docker exec --env-file env.custom -w /root/build/etc/ld.so.conf.d multiarch bash -c "echo '/${{ env.opt_dir_name }}/lib' > qt.conf"
+
+      - name: Host - Create deb packages
+        uses: jiro4989/build-deb-action@v2
+        with:
+          package: "${{ matrix.name }}"
+          package_root: build
+          maintainer: userdocs
+          version: "${{ env.qt_version }}"
+          depends: "${{ env.qt-deb-deps }}"
+          arch: "${{ matrix.arch }}"
+          desc: "${{ matrix.name }}-${{ matrix.arch }} for ${{ matrix.os_id }}-${{ matrix.os_version_id }}"
+
+      - name: Host - Remove version from release name and use hyphens
+        run: mv -f "${{ matrix.name }}_${{ env.qt_version }}_${{ matrix.arch }}.deb" "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
+
+      - name: Host - Upload artifacts
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ env.qt_version }}-${{ matrix.arch }}"
+          path: "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
+
+      - name: Host - "Create release - tag - assets"
+        uses: ncipollo/release-action@v1
+        with:
+          prerelease: false
+          artifacts: "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
+          replacesArtifacts: true
+          tag: "${{ env.qt_version }}"
+          name: "qt ${{ env.qt_version }}"
+          body: "Built with cmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Buster Bullseye and Ubuntu bionic Focal"
+          allowUpdates: true
+          token: "${{ secrets.GITHUB_TOKEN }}"

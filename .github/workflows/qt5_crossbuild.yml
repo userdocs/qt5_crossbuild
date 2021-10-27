@@ -16,16 +16,17 @@ jobs:
             CHOST: "x86_64-linux-gnu"
             docker_arch: amd64
             docker_platform: linux/amd64
+            qt_mkspec: ""
           - arch: armhf
             CHOST: "arm-linux-gnueabihf"
             docker_arch: arm32v7
             docker_platform: linux/arm/v7
-            qt_mkspec: -xplatform linux-arm-gnueabi-g++
+            qt_mkspec: "-xplatform linux-arm-gnueabi-g++"
           - arch: arm64
             CHOST: "aarch64-linux-gnu"
             docker_arch: arm64v8
             docker_platform: linux/arm64/v8
-            qt_mkspec: -xplatform linux-aarch64-gnu-g++
+            qt_mkspec: "-xplatform linux-aarch64-gnu-g++"
         exclude:
           - os_id: debian
             os_version_id: bionic
@@ -148,7 +149,7 @@ jobs:
 
       - name: Docker target - qt qtbase - configure
         run: |
-          docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ env.qt_mkspec }} \
+          docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} \
           -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -ssl -c++std 17 \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples

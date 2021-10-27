@@ -166,12 +166,12 @@ jobs:
 
       - name: Docker target - qt qttools - make build
         run: |
-          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
+          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch /root/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
           make -j"$(nproc)"
 
       - name: Docker target - qt qttools - make install
         run: |
-          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
+          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch /root/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
           make install
 
       - name: Docker target - Set deb dependencies for qt

@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [qt]
+        name: [qt5]
         os_id: [debian, ubuntu]
         os_version_id: [buster, bullseye, bionic, focal]
         arch: [amd64, armhf, arm64]
@@ -140,11 +140,11 @@ jobs:
 
       - name: Docker target - qt qtbase - mkspec armhf
         if: matrix.arch == 'armhf'
-        run: sed "s|arm-linux-gnueabi|${{ env.CHOST }}|g" -i "/root/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-arm-gnueabi-g++/qmake.conf"
+        run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch sed "s|arm-linux-gnueabi|${{ env.CHOST }}|g" -i "mkspecs/linux-arm-gnueabi-g++/qmake.conf"
 
       - name: Docker target - qt qtbase - mkspec arm64
         if: matrix.arch == 'arm64'
-        run: sed "s|aarch64-linux-gnu|${{ env.CHOST }}|g" -i "/root/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-aarch64-gnu-g++/qmake.conf"
+        run: docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch sed "s|aarch64-linux-gnu|${{ env.CHOST }}|g" -i "mkspecs/linux-aarch64-gnu-g++/qmake.conf"
 
       - name: Docker target - qt qtbase - configure
         run: |

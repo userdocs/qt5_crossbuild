@@ -149,7 +149,7 @@ jobs:
 
       - name: Docker target - qt qtbase - configure
         run: |
-          docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} \
+          docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -icu -L /usr/lib/${{ env.CHOST }} \
           -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -ssl -c++std 17 \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples

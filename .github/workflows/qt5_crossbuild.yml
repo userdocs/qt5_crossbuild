@@ -98,7 +98,7 @@ jobs:
 
       - name: Docker target - apt-get install the core build dependencies
         run: |
-          docker exec --env-file env.custom multiarch apt-get install -y build-essential curl pkg-config automake libtool git perl python3 python3-dev unzip libssl-dev
+          docker exec --env-file env.custom multiarch apt-get install -y build-essential curl pkg-config automake libtool git perl python3 python3-dev unzip ccache 
           docker exec --env-file env.custom bintest apt-get install -y openssl
 
       - name: Docker target - apt-get install crossbuild-essential
@@ -150,7 +150,7 @@ jobs:
       - name: Docker target - qt qtbase - configure
         run: |
           docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -icu -L /usr/lib/${{ env.CHOST }} \
-          -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -ssl -c++std 17 \
+          -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -openssl-linked -c++std 17 \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples
 

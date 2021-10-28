@@ -9,7 +9,7 @@ jobs:
       matrix:
         name: [qt5]
         os_id: [debian, ubuntu]
-        os_version_id: [buster, bullseye, bionic, focal]
+        os_version_id: [stretch, buster, bullseye, bionic, focal]
         arch: [amd64, armhf, arm64]
         include:
           - arch: amd64
@@ -32,6 +32,8 @@ jobs:
             os_version_id: bionic
           - os_id: debian
             os_version_id: focal
+          - os_id: ubuntu
+            os_version_id: stretch
           - os_id: ubuntu
             os_version_id: buster
           - os_id: ubuntu

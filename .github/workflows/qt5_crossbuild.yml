@@ -45,6 +45,7 @@ jobs:
       CXX: "${{ matrix.CHOST }}-g++"
       opt_dir_name: "opt/swizzin_apps"
       qt_short_version: "5.15"
+
     steps:
       - uses: actions/checkout@v2.3.4
 

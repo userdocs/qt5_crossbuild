@@ -48,6 +48,7 @@ jobs:
       opt_dir_name: "opt/swizzin_apps"
       qt_short_version: "5.15"
       cxx_standard: "17"
+      prerelease: false
 
     steps:
       - uses: actions/checkout@v2.3.4
@@ -132,6 +133,7 @@ jobs:
         run: |
           echo "qt_short_version=5.12" >> $GITHUB_ENV
           echo "cxx_standard=14" >> $GITHUB_ENV
+          echo "prerelease=true" >> $GITHUB_ENV
 
       - name: Docker target - qt get latest release info and set to env
         run: |
@@ -217,7 +219,7 @@ jobs:
       - name: Host - "Create release - tag - assets"
         uses: ncipollo/release-action@v1
         with:
-          prerelease: false
+          prerelease: ${{ env.prerelease }}
           artifacts: "${{ matrix.os_id }}-${{ matrix.os_version_id }}-${{ matrix.name }}-${{ matrix.arch }}.deb"
           replacesArtifacts: true
           tag: "${{ env.qt_version }}"

@@ -130,7 +130,7 @@ jobs:
       - name: Docker target - stretch - reconfigure qt version
         if: matrix.os_version_id == 'stretch'
         run: |
-          echo "qt_short_version=5.14" >> $GITHUB_ENV
+          echo "qt_short_version=5.12" >> $GITHUB_ENV
           echo "cxx_standard=14" >> $GITHUB_ENV
 
       - name: Docker target - qt get latest release info and set to env

@@ -191,7 +191,7 @@ jobs:
       - name: Docker target - Set deb dependencies for qt
         run: echo "qt-deb-deps=zlib1g,openssl" >> $GITHUB_ENV
 
-      - name: Docker target - ldconfig - create /etc/ld.so.conf.d/qt.conf
+      - name: Docker target - ldconfig - create /etc/ld.so.conf.d/qt5.conf
         run: |
           docker exec --env-file env.custom -w /root/build multiarch mkdir -p etc/ld.so.conf.d
           docker exec --env-file env.custom -w /root/build/etc/ld.so.conf.d multiarch bash -c "echo '/${{ env.opt_dir_name }}/lib' > qt5.conf"

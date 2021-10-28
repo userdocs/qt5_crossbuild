@@ -47,6 +47,7 @@ jobs:
       CXX: "${{ matrix.CHOST }}-g++"
       opt_dir_name: "opt/swizzin_apps"
       qt_short_version: "5.15"
+      cxx_standard: "17"
 
     steps:
       - uses: actions/checkout@v2.3.4
@@ -126,6 +127,12 @@ jobs:
           echo "AR=${{ env.AR }}-8" >> env.custom
           echo "CXX=${{ env.CXX }}-8" >> env.custom
 
+      - name: Docker target - stretch - reconfigure qt version
+        if: matrix.os_version_id == 'stretch'
+        run: |
+          echo "qt_short_version=5.14" >> $GITHUB_ENV
+          echo "cxx_standard=14" >> $GITHUB_ENV
+
       - name: Docker target - qt get latest release info and set to env
         run: |
           qt_github_tag_list="$(git ls-remote -q -t --refs https://github.com/qt/qtbase.git | awk '{sub("refs/tags/", "");sub("(.*)(-[^0-9].*)(.*)", ""); print $2 }' | awk '!/^$/' | sort -rV)"
@@ -153,7 +160,7 @@ jobs:
       - name: Docker target - qt qtbase - configure
         run: |
           docker exec --env-file env.custom -w /root/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -icu -L /usr/lib/${{ env.CHOST }} \
-          -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -openssl-linked -c++std 17 \
+          -prefix "/root/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -openssl-linked -c++std ${{ env.cxx_standard }} \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples
 
@@ -171,7 +178,7 @@ jobs:
       - name: Docker target - qt qttools - make build
         run: |
           docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch /root/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/root/build/${{ env.opt_dir_name }}"
-          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch /root/build/${{ env.opt_dir_name }}/bin/qmake
+          docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch /root/build/${{ env.opt_dir_name }}/bin/qmake QMAKE_CXXFLAGS="-std=cxx${{ env.cxx_standard }}""
           docker exec --env-file env.custom -w /root/qttools-everywhere-src-${{ env.qt_version }} multiarch make -j"$(nproc)"
 
       - name: Docker target - qt qttools - make install

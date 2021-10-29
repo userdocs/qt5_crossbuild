@@ -164,7 +164,7 @@ jobs:
 
       - name: Docker target - qt qttools
         run: |
-          docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://invent.kde.org/qt/qt/qtools.git" "qttools"
+          docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://invent.kde.org/qt/qt/qttools.git" "qttools"
 
       - name: Docker target - qt qttools - make build
         run: |

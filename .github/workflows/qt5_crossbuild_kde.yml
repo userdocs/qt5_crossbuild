@@ -1,4 +1,4 @@
-name: qt5+crossbuild+package+release
+name: qt5+crossbuild+kde+package+release
 on:
   - workflow_dispatch
 jobs:

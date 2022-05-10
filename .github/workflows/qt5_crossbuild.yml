@@ -170,7 +170,7 @@ jobs:
         run: docker exec --env-file env.custom -w /root/qtbase multiarch sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "mkspecs/linux-aarch64-gnu-g++/qmake.conf"
 
       - name: Docker target - qt qtbase - fix gcc 11 building
-        run: docker exec --env-file env.custom -w /root/qtbase multiarch sed '/^#  include <utility>/a #  include <limits>' -i "src/corelib/global/qglobal.h"
+        run: docker exec --env-file env.custom -w /root/qtbase multiarch sed '/^#  include <utility>/a#  include <limits>' -i "src/corelib/global/qglobal.h"
 
       - name: Docker target - qt qtbase - configure
         run: |

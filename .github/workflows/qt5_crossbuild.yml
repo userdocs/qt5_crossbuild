@@ -169,6 +169,9 @@ jobs:
         if: matrix.arch == 'arm64'
         run: docker exec --env-file env.custom -w /root/qtbase multiarch sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "mkspecs/linux-aarch64-gnu-g++/qmake.conf"
 
+      - name: Docker target - qt qtbase - fix gcc 11 building
+        run: docker exec --env-file env.custom -w /root/qtbase multiarch sed '/^#  include <utility>/a #  include <limits>' -i "src/corelib/global/qglobal.h"
+
       - name: Docker target - qt qtbase - configure
         run: |
           docker exec --env-file env.custom -w /root/qtbase multiarch ./configure ${{ matrix.qt_mkspec }} -I ${{ env.include_dir }} -L ${{ env.lib_dir }} \

@@ -49,7 +49,7 @@ jobs:
       include_dir: "/opt/local/include"
       lib_dir: "/opt/local/lib"
       qt_version: ""
-      github_branch: "5.15"
+      github_branch: "v5.15.4-lts-lgpl"
       cxx_standard: "17"
       prerelease: false
 
@@ -156,7 +156,7 @@ jobs:
           echo "cxx_standard=14" >> $GITHUB_ENV
 
       - name: Docker target - qt qtbase
-        run: docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://invent.kde.org/qt/qt/qtbase.git" "qtbase"
+        run: docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://github.com/qt/qtbase.git" "qtbase"
 
       - name: Host - Get and set qt version from .qmake.conf
         run: echo "qt_version=$(sed -rn 's|MODULE_VERSION = (.*)|\1|p' qtbase/.qmake.conf)" >> $GITHUB_ENV
@@ -184,7 +184,7 @@ jobs:
 
       - name: Docker target - qt qttools
         run: |
-          docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://invent.kde.org/qt/qt/qttools.git" "qttools"
+          docker exec --env-file env.custom multiarch git clone --single-branch --branch "${{ env.github_branch }}" --shallow-submodules --recurse-submodules --depth 1 "https://github.com/qt/qtbase.git" "qttools"
 
       - name: Docker target - qt qttools - make build
         run: |

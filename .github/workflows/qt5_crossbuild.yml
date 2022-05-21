@@ -1,6 +1,8 @@
 name: qt5+kde+crossbuild+package+release
 on:
-  - workflow_dispatch
+  workflow_dispatch:
+  schedule:
+    - cron: "0 07 * * *"
 
 jobs:
   build:

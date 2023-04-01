@@ -126,7 +126,7 @@ jobs:
           qt_github_tag="$(git ls-remote -q -t --refs "https://github.com/qt/qtbase.git" | awk '/'"v${qt_short_version}"'/{sub("refs/tags/", "");sub("(.*)(-a|-b|-r)", ""); print $2 }' | awk '!/^$/' | sort -rV | head -n 1)"
           qt_version=${qt_github_tag%%-*}
 
-          read -ra qt_version_short_array <<< "${qt_version[qtbase]//\./ }"
+          read -ra qt_version_short_array <<< "${qt_version//\./ }"
           qt_short_version="${qt_version_short_array[0]}.${qt_version_short_array[1]}"
 
           echo "qt_qtbase_url=https://download.qt.io/official_releases/qt/${qt_version_short}/${qt_version}/submodules/qtbase-everywhere-opensource-src-${qt_version}.tar.xz" >> $GITHUB_ENV

@@ -169,14 +169,14 @@ jobs:
 
       - name: Docker - qt qttools - make build
         run: |
-          docker exec -w /home/github/qttools multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/home/github/build/${{ env.opt_dir_name }}"
-          docker exec -w /home/github/qttools multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake QMAKE_CXXFLAGS="-std=c++${{ env.cxx_standard }}"
-          docker exec -w /home/github/qttools multiarch make -j"$(nproc)"
+          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version } multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/home/github/build/${{ env.opt_dir_name }}"
+          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version } multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake QMAKE_CXXFLAGS="-std=c++${{ env.cxx_standard }}"
+          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version } multiarch make -j"$(nproc)"
 
       - name: Docker - qt qttools - make install
         run: |
-          docker exec -w /home/github/qttools multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/home/github/build/${{ env.opt_dir_name }}"
-          docker exec -w /home/github/qttools multiarch make install QMAKE_CXXFLAGS="-std=c++${{ env.cxx_standard }}"
+          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version } multiarch /home/github/build/${{ env.opt_dir_name }}/bin/qmake -set prefix "/home/github/build/${{ env.opt_dir_name }}"
+          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version } multiarch make install QMAKE_CXXFLAGS="-std=c++${{ env.cxx_standard }}"
 
       - name: Docker - Set deb dependencies for qt
         run: echo "qt-deb-deps=zlib-ng,openssl" >> $GITHUB_ENV

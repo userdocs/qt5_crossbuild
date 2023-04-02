@@ -31,7 +31,7 @@ jobs:
       matrix:
         name: [qt5]
         os_id: [debian, ubuntu]
-        os_codename: [stretch, buster, bullseye, bionic, focal, jammy]
+        os_codename: [buster, bullseye, bionic, focal, jammy]
         arch: [amd64, armhf, arm64]
         include:
           - arch: amd64
@@ -56,8 +56,6 @@ jobs:
             os_codename: focal
           - os_id: debian
             os_codename: jammy
-          - os_id: ubuntu
-            os_codename: stretch
           - os_id: ubuntu
             os_codename: buster
           - os_id: ubuntu
@@ -139,11 +137,6 @@ jobs:
         run: |
           curl -sNL ${{ env.qt_qtbase_url }} -o qtbase.tar.xz
           tar xf qtbase.tar.xz
-
-      - name: Host - stretch - reconfigure unique envs
-        if: matrix.os_codename == 'stretch'
-        run: |
-          echo "cxx_standard=14" >> $GITHUB_ENV
 
       - name: Docker - qt qtbase - mkspec armhf
         if: matrix.arch == 'armhf'
@@ -252,7 +245,7 @@ jobs:
           replacesArtifacts: true
           tag: "${{ env.qt_version }}"
           name: "qt ${{ env.qt_version }}"
-          body: "Built with qmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Stretch Debian Buster Bullseye and Ubuntu bionic Focal Jammy"
+          body: "Built with qmake using v${{ env.qt_version }} from github on amd64 arm64 armhf for Debian Buster Bullseye and Ubuntu bionic Focal Jammy"
           allowUpdates: true
 
   rerun-on-failure:

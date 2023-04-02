@@ -164,7 +164,7 @@ jobs:
 
       - name: Host - qt qttools - curl
         run: |
-          curl -sNL ${{ env.qt_qtbase_url }} -o qttools.tar.xz
+          curl -sNL ${{ env.qt_qttools_url }} -o qttools.tar.xz
           tar xf qttools.tar.xz
 
       - name: Docker - qt qttools - make build

@@ -147,27 +147,27 @@ jobs:
 
       - name: Docker - qt qtbase - mkspec armhf
         if: matrix.arch == 'armhf'
-        run: docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch sed "s|arm-linux-gnueabi|${{ matrix.CHOST }}|g" -i "mkspecs/linux-arm-gnueabi-g++/qmake.conf"
+        run: sed "s|arm-linux-gnueabi|${{ matrix.CHOST }}|g" -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-arm-gnueabi-g++/qmake.conf"
 
       - name: Docker - qt qtbase - mkspec arm64
         if: matrix.arch == 'arm64'
-        run: docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "mkspecs/linux-aarch64-gnu-g++/qmake.conf"
+        run: sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-aarch64-gnu-g++/qmake.conf"
 
       - name: Docker - qt qtbase - fix gcc 11 building
-        run: docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch sed '/^#  include <utility>/a#  include <limits>' -i "src/corelib/global/qglobal.h"
+        run: sed '/^#  include <utility>/a#  include <limits>' -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/src/corelib/global/qglobal.h"
 
       - name: Docker - qt qtbase - configure
         run: |
-          docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -I ${{ env.include_dir }} -L ${{ env.lib_dir }} \
+          docker exec -w /home/github/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -I ${{ env.include_dir }} -L ${{ env.lib_dir }} \
           -prefix "/home/github/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -ssl -c++std ${{ env.cxx_standard }}  \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets -no-glib \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples
 
       - name: Docker - qt qtbase - make
-        run: docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch make
+        run: docker exec -w /home/github/qtbase-everywhere-src-${{ env.qt_version }} multiarch make
 
       - name: Docker - qt qtbase - make install
-        run: docker exec -w /home/github/qttools-everywhere-src-${{ env.qt_version }} multiarch make install
+        run: docker exec -w /home/github/qtbase-everywhere-src-${{ env.qt_version }} multiarch make install
 
       - name: Host - qt qttools - curl
         run: |

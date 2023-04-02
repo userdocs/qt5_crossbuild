@@ -147,14 +147,14 @@ jobs:
 
       - name: Docker - qt qtbase - mkspec armhf
         if: matrix.arch == 'armhf'
-        run: sed "s|arm-linux-gnueabi|${{ matrix.CHOST }}|g" -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-arm-gnueabi-g++/qmake.conf"
+        run: sed "s|arm-linux-gnueabi|${{ matrix.CHOST }}|g" -i "qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-arm-gnueabi-g++/qmake.conf"
 
       - name: Docker - qt qtbase - mkspec arm64
         if: matrix.arch == 'arm64'
-        run: sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-aarch64-gnu-g++/qmake.conf"
+        run: sed "s|aarch64-linux-gnu|${{ matrix.CHOST }}|g" -i "qtbase-everywhere-src-${{ env.qt_version }}/mkspecs/linux-aarch64-gnu-g++/qmake.conf"
 
       - name: Docker - qt qtbase - fix gcc 11 building
-        run: sed '/^#  include <utility>/a#  include <limits>' -i "/home/github/qtbase-everywhere-src-${{ env.qt_version }}/src/corelib/global/qglobal.h"
+        run: sed '/^#  include <utility>/a#  include <limits>' -i "qtbase-everywhere-src-${{ env.qt_version }}/src/corelib/global/qglobal.h"
 
       - name: Docker - qt qtbase - configure
         run: |

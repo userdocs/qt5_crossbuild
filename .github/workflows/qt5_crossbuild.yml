@@ -158,7 +158,7 @@ jobs:
 
       - name: Docker - qt qtbase - configure
         run: |
-          docker exec -w /home/github/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} -I ${{ env.include_dir }} -L ${{ env.lib_dir }} \
+          docker exec -w /home/github/qtbase-everywhere-src-${{ env.qt_version }} multiarch ./configure ${{ matrix.qt_mkspec }} \
           -prefix "/home/github/build/${{ env.opt_dir_name }}" -opensource -confirm-license -release -ssl -c++std ${{ env.cxx_standard }}  \
           -qt-pcre -no-feature-glib -no-feature-opengl -no-feature-dbus -no-feature-gui -no-feature-widgets \
           -no-feature-testlib -no-compile-examples -skip tests -nomake tests -skip examples -nomake examples

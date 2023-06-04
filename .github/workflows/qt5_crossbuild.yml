@@ -31,7 +31,7 @@ jobs:
       matrix:
         name: [qt5]
         os_id: [debian, ubuntu]
-        os_codename: [buster, bullseye, bionic, focal, jammy]
+        os_codename: [buster, bullseye, bookworm, bionic, focal, jammy]
         arch: [amd64, armhf, arm64]
         include:
           - arch: amd64
@@ -60,6 +60,8 @@ jobs:
             os_codename: buster
           - os_id: ubuntu
             os_codename: bullseye
+          - os_id: ubuntu
+            os_codename: bookworm
 
     name: ${{ matrix.os_id }}:${{ matrix.os_codename }} ${{ matrix.name }} ${{ matrix.arch }}
 
@@ -253,4 +255,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Trigger rerun workflow on job failures
-        run: gh workflow run rerun.yml -f run_id=${{ github.run_id }} -f attempts=${{ github.run_attempt }} -f retries=${{ inputs.retries }}
+        run: |
+          inputs_value="${{ inputs.retries }}"
+          gh workflow run rerun.yml -f run_id=${{ github.run_id }} -f attempts=${{ github.run_attempt }} -f retries=${inputs_value:-3}
